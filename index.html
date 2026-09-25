@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Study Hub - Ultimate Assistant</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+    
+    <!-- Markmap -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.15.4/dist/browser/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4/dist/browser/index.js"></script>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar glass-panel">
+        <div class="logo">
+            <i class="fas fa-brain"></i> AI Study Hub
+        </div>
+        
+        <nav class="nav-links">
+            <button class="nav-btn active" data-target="home"><i class="fas fa-home"></i> Home</button>
+            <button class="nav-btn" data-target="resume"><i class="fas fa-file-alt"></i> Resume Builder</button>
+            <button class="nav-btn" data-target="notes"><i class="fas fa-book-open"></i> Notes Generator</button>
+            <button class="nav-btn" data-target="ppt"><i class="fas fa-desktop"></i> PPT Generator</button>
+            <button class="nav-btn" data-target="mindmap"><i class="fas fa-project-diagram"></i> Mind Map</button>
+            <button class="nav-btn" data-target="sheets"><i class="fas fa-table"></i> Sheets Backend</button>
+            <button class="nav-btn" data-target="quiz"><i class="fas fa-question-circle"></i> AI Quiz</button>
+            <button class="nav-btn" data-target="chatbot"><i class="fas fa-comments"></i> Doubt Chatbot</button>
+            <button class="nav-btn" data-target="flashcards"><i class="fas fa-clone"></i> Flashcards</button>
+            <button class="nav-btn" data-target="planner"><i class="fas fa-calendar-alt"></i> Study Planner</button>
+            <button class="nav-btn" data-target="ocr"><i class="fas fa-camera"></i> OCR Summarizer</button>
+        </nav>
+
+        <div class="api-key-section">
+            <label for="api-key-input">Gemini API Key</label>
+            <input type="password" id="api-key-input" placeholder="Paste key here..." autocomplete="off">
+            <button id="save-key-btn" class="btn-small">Save Key</button>
+            <small class="status-text text-muted" style="display:block; margin-top:4px;">Not stored — cleared when you close this tab.</small>
+            <small id="key-status" class="status-text text-error">Missing Key</small>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Home View -->
+        <section id="home" class="view-section active glass-panel">
+            <h1>Welcome to the AI Study Hub</h1>
+            <p>Your all-in-one AI-powered classroom assistant. Please enter your Gemini API Key in the sidebar to get started!</p>
+            <div class="feature-grid mt-2">
+                <div class="feature-card"><i class="fas fa-bolt"></i> 10 Integrated Tools</div>
+                <div class="feature-card"><i class="fas fa-lock"></i> No Permanent Storage</div>
+                <div class="feature-card"><i class="fas fa-paint-brush"></i> Premium UI</div>
+            </div>
+        </section>
+
+        <!-- 1. Resume Builder -->
+        <section id="resume" class="view-section glass-panel">
+            <h2><i class="fas fa-file-alt"></i> AI Resume Builder</h2>
+            <form id="resume-form" class="two-col">
+                <div class="input-area">
+                    <input type="text" id="res-name" placeholder="Full Name" required>
+                    <input type="text" id="res-contact" placeholder="Email / Phone" required>
+                    <textarea id="res-edu" placeholder="Education details (e.g. B.Tech CS, CGPA)" required></textarea>
+                    <textarea id="res-skills" placeholder="Skills (e.g. React, Node, Python)" required></textarea>
+                    <textarea id="res-exp" placeholder="Experience / Projects" required></textarea>
+                    <button type="submit" id="btn-resume" class="btn-primary">Generate Resume <i class="fas fa-magic"></i></button>
+                    <div id="resume-error" class="error-msg mt-1"></div>
+                </div>
+                <div class="output-area">
+                    <div id="resume-output" class="content-box placeholder">Generated resume will appear here...</div>
+                    <button type="button" id="btn-print-resume" class="btn-secondary mt-1 hidden"><i class="fas fa-file-pdf"></i> Download PDF</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 2. Notes Generator -->
+        <section id="notes" class="view-section glass-panel">
+            <h2><i class="fas fa-book-open"></i> AI Notes Generator</h2>
+            <p>Paste a long textbook paragraph or topic, and AI will convert it into structured study notes.</p>
+            <textarea id="notes-input" placeholder="Paste raw text here..."></textarea>
+            <button id="btn-notes" class="btn-primary mt-1">Generate Notes <i class="fas fa-magic"></i></button>
+            <div id="notes-error" class="error-msg mt-1"></div>
+            
+            <div class="actions-row hidden" id="notes-actions">
+                <button id="btn-copy-notes" class="btn-small"><i class="fas fa-copy"></i> Copy</button>
+                <button id="btn-download-notes" class="btn-small"><i class="fas fa-download"></i> Download .txt</button>
+            </div>
+            <div id="notes-output" class="content-box markdown-body mt-1 placeholder">Structured notes will appear here...</div>
+        </section>
+
+        <!-- 3. PPT Generator -->
+        <section id="ppt" class="view-section glass-panel">
+            <h2><i class="fas fa-desktop"></i> AI PPT Generator</h2>
+            <input type="text" id="ppt-topic" placeholder="Enter presentation topic...">
+            <button id="btn-ppt" class="btn-primary mt-1">Generate Slides <i class="fas fa-magic"></i></button>
+            <div id="ppt-error" class="error-msg mt-1"></div>
+            
+            <div id="ppt-container" class="ppt-container mt-2 hidden">
+                <div id="ppt-slide" class="slide-box"></div>
+                <div class="ppt-controls">
+                    <button id="btn-ppt-prev" class="btn-secondary"><i class="fas fa-chevron-left"></i> Prev</button>
+                    <span id="ppt-counter">1 / 5</span>
+                    <button id="btn-ppt-next" class="btn-secondary">Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Mind Map Generator -->
+        <section id="mindmap" class="view-section glass-panel">
+            <h2><i class="fas fa-project-diagram"></i> AI Mind Map</h2>
+            <p>Enter a syllabus or topic list. AI will break it into a hierarchical structure.</p>
+            <textarea id="mindmap-input" placeholder="Paste syllabus or topics here..."></textarea>
+            <button id="btn-mindmap" class="btn-primary mt-1">Generate Map <i class="fas fa-magic"></i></button>
+            <div id="mindmap-error" class="error-msg mt-1"></div>
+            
+            <div class="content-box mt-2 markmap-container" style="height: 500px;">
+                <svg id="markmap-svg" style="width: 100%; height: 100%;"></svg>
+            </div>
+        </section>
+
+        <!-- 5. Sheets Backend -->
+        <section id="sheets" class="view-section glass-panel">
+            <h2><i class="fas fa-table"></i> Google Sheets Backend</h2>
+            <div class="api-key-section" style="border: none; padding-top: 0;">
+                <label>Apps Script Web App URL</label>
+                <input type="password" id="sheets-url" placeholder="https://script.google.com/macros/s/.../exec">
+                <small class="status-text text-muted">Not stored — cleared when you close this tab.</small>
+            </div>
+            
+            <div class="two-col mt-2">
+                <div>
+                    <h3>Add New Record</h3>
+                    <input type="text" id="sheet-name" placeholder="Name">
+                    <input type="text" id="sheet-score" placeholder="Score">
+                    <button id="btn-sheet-post" class="btn-primary mt-1">Submit to Sheet</button>
+                    <div id="sheet-post-msg" class="mt-1"></div>
+                </div>
+                <div>
+                    <h3>Sheet Data</h3>
+                    <button id="btn-sheet-get" class="btn-secondary">Load Data</button>
+                    <div id="sheet-get-msg" class="mt-1"></div>
+                    <table class="data-table mt-1" id="sheet-table">
+                        <thead><tr><th>Name</th><th>Score</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-2">
+                <button id="btn-sheet-insight" class="btn-primary">Generate AI Insight</button>
+                <div id="sheet-insight-output" class="content-box mt-1 placeholder">AI insights based on loaded sheet data will appear here...</div>
+            </div>
+        </section>
+
+        <!-- 6. AI Quiz -->
+        <section id="quiz" class="view-section glass-panel">
+            <h2><i class="fas fa-question-circle"></i> AI MCQ Quiz</h2>
+            <div id="quiz-setup">
+                <input type="text" id="quiz-topic" placeholder="Enter topic to generate quiz on...">
+                <button id="btn-quiz-gen" class="btn-primary mt-1">Generate Quiz</button>
+                <div id="quiz-error" class="error-msg mt-1"></div>
+            </div>
+            
+            <div id="quiz-play" class="hidden mt-2">
+                <h3 id="quiz-question" class="mb-1"></h3>
+                <div id="quiz-options" class="quiz-options"></div>
+                <div class="mt-2">
+                    <span id="quiz-score-display">Score: 0</span>
+                    <button id="btn-quiz-next" class="btn-primary hidden" style="float: right;">Next Question</button>
+                </div>
+            </div>
+            
+            <div id="quiz-result" class="hidden mt-2 content-box text-center">
+                <h3>Quiz Complete!</h3>
+                <p id="quiz-final-score"></p>
+                <button id="btn-quiz-restart" class="btn-primary mt-1">Restart</button>
+            </div>
+        </section>
+
+        <!-- 7. Chatbot -->
+        <section id="chatbot" class="view-section glass-panel">
+            <h2><i class="fas fa-comments"></i> Subject Doubt-Solving Chatbot</h2>
+            <div class="chat-container">
+                <div id="chat-history" class="chat-history">
+                    <div class="chat-bubble ai">Hello! I am your AI tutor. Ask me any doubt.</div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Type your question here...">
+                    <button id="btn-chat" class="btn-primary"><i class="fas fa-paper-plane"></i></button>
+                    <button id="btn-chat-clear" class="btn-secondary" title="Clear Chat"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. Flashcards -->
+        <section id="flashcards" class="view-section glass-panel">
+            <h2><i class="fas fa-clone"></i> AI Flashcards</h2>
+            <textarea id="flashcard-topic" placeholder="Enter a topic or chapter text..."></textarea>
+            <div style="display:flex; gap: 1rem;" class="mt-1">
+                <button id="btn-flashcards" class="btn-primary">Generate Deck <i class="fas fa-magic"></i></button>
+                <button id="btn-flashcards-shuffle" class="btn-secondary hidden"><i class="fas fa-random"></i> Shuffle</button>
+            </div>
+            <div id="flashcards-error" class="error-msg mt-1"></div>
+            
+            <div id="flashcards-output" class="flashcard-grid mt-2">
+                <div class="content-box placeholder" style="grid-column: 1 / -1;">Cards will appear here...</div>
+            </div>
+        </section>
+
+        <!-- 9. Study Planner -->
+        <section id="planner" class="view-section glass-panel">
+            <h2><i class="fas fa-calendar-alt"></i> AI Study Planner</h2>
+            <div class="two-col">
+                <div class="input-area">
+                    <input type="text" id="plan-subjects" placeholder="Subjects (e.g. Math, Physics)">
+                    <input type="number" id="plan-hours" placeholder="Hours per day">
+                    <input type="text" id="plan-days" placeholder="Number of days until exam">
+                    <button id="btn-planner" class="btn-primary mt-1">Generate Plan <i class="fas fa-magic"></i></button>
+                    <div id="planner-error" class="error-msg mt-1"></div>
+                </div>
+                <div class="output-area">
+                    <div id="planner-output" class="content-box placeholder" style="padding:0; overflow:hidden;">Timetable will appear here...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10. OCR Summarizer -->
+        <section id="ocr" class="view-section glass-panel">
+            <h2><i class="fas fa-camera"></i> AI Notes Summarizer (OCR)</h2>
+            <p>Upload a photo of your notes. We'll extract text in-browser and summarize it!</p>
+            <input type="file" id="ocr-image" accept="image/*" class="mt-1">
+            <button id="btn-ocr" class="btn-primary mt-1">Extract & Summarize <i class="fas fa-magic"></i></button>
+            <div id="ocr-error" class="error-msg mt-1"></div>
+            
+            <div class="two-col mt-2">
+                <div>
+                    <h3>Extracted Text (Editable)</h3>
+                    <textarea id="ocr-raw" class="content-box placeholder" style="width: 100%; height: 300px;">OCR text will appear here...</textarea>
+                    <button id="btn-ocr-resummarize" class="btn-secondary mt-1 hidden">Re-Summarize Edits</button>
+                </div>
+                <div>
+                    <h3>AI Summary</h3>
+                    <div id="ocr-summary" class="content-box placeholder" style="height: 300px; overflow-y:auto;">Summary will appear here...</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+</body>
+</html>
