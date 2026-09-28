@@ -332,16 +332,24 @@ textarea {
 }
 
 /* Flashcards - CSS 3D Flip */
-.flashcard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.25rem;
+.flashcard-deck {
+    max-width: 640px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 .flashcard-container {
     perspective: 1000px;
-    min-height: 160px;
+    height: 260px; /* fixed height: children are absolutely positioned */
+    padding: 1.5rem;
     cursor: pointer;
+    outline: none;
+}
+.flashcard-container:focus-visible .flashcard {
+    box-shadow: 0 0 0 3px var(--primary-color);
 }
 
 .flashcard {
@@ -480,6 +488,7 @@ textarea {
     width: 100%;
     border-collapse: collapse;
 }
+#planner-output.content-box:not(.placeholder) { overflow-x: auto; }
 #planner-output th, #planner-output td {
     border: 1px solid var(--border-color);
     padding: 0.75rem;
@@ -493,6 +502,29 @@ textarea {
     font-size: 0.85rem;
     font-weight: 500;
 }
+
+/* Planner Grid */
+#planner-output { padding: 0; }
+#planner-output td { vertical-align: top; min-width: 110px; }
+#planner-output .subject-pill { margin: 2px 0; color: #202124; }
+.planner-legend { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+/* OCR */
+.ocr-preview {
+    display: block;
+    max-width: 100%;
+    max-height: 240px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+/* Chat typing indicator */
+.chat-bubble.typing { opacity: 0.7; font-style: italic; }
+
+/* Misc */
+.btn-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+.hint { color: var(--text-muted); font-size: 0.9rem; display: block; margin-bottom: 0.5rem; }
+#markmap-svg .markmap-node foreignObject { cursor: pointer; }
 
 /* Actions Row */
 .actions-row {
