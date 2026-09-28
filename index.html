@@ -16,6 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js" defer></script>
     
     <!-- Markmap -->
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
@@ -74,10 +75,14 @@
                 <div class="input-area">
                     <input type="text" id="res-name" placeholder="Full Name" required>
                     <input type="text" id="res-contact" placeholder="Email / Phone" required>
+                    <textarea id="res-objective" placeholder="Career objective (e.g. Seeking a frontend internship...)" required></textarea>
                     <textarea id="res-edu" placeholder="Education details (e.g. B.Tech CS, CGPA)" required></textarea>
                     <textarea id="res-skills" placeholder="Skills (e.g. React, Node, Python)" required></textarea>
                     <textarea id="res-exp" placeholder="Experience / Projects" required></textarea>
-                    <button type="submit" id="btn-resume" class="btn-primary">Generate Resume <i class="fas fa-magic"></i></button>
+                    <div class="btn-row">
+                        <button type="submit" id="btn-resume" class="btn-primary">Generate Resume <i class="fas fa-magic"></i></button>
+                        <button type="button" id="btn-resume-sample" class="btn-secondary"><i class="fas fa-user"></i> Load Sample Profile</button>
+                    </div>
                     <div id="resume-error" class="error-msg mt-1"></div>
                 </div>
                 <div class="output-area">
@@ -98,6 +103,7 @@
             <div class="actions-row hidden" id="notes-actions">
                 <button id="btn-copy-notes" class="btn-small"><i class="fas fa-copy"></i> Copy</button>
                 <button id="btn-download-notes" class="btn-small"><i class="fas fa-download"></i> Download .txt</button>
+                <button id="btn-download-notes-pdf" class="btn-small"><i class="fas fa-file-pdf"></i> Download .pdf</button>
             </div>
             <div id="notes-output" class="content-box markdown-body mt-1 placeholder">Structured notes will appear here...</div>
         </section>
@@ -117,6 +123,9 @@
                     <button id="btn-ppt-next" class="btn-secondary">Next <i class="fas fa-chevron-right"></i></button>
                 </div>
             </div>
+            <div class="actions-row mt-1 hidden" id="ppt-actions">
+                <button id="btn-ppt-export" class="btn-small"><i class="fas fa-file-powerpoint"></i> Export .pptx</button>
+            </div>
         </section>
 
         <!-- 4. Mind Map Generator -->
@@ -127,9 +136,11 @@
             <button id="btn-mindmap" class="btn-primary mt-1">Generate Map <i class="fas fa-magic"></i></button>
             <div id="mindmap-error" class="error-msg mt-1"></div>
             
-            <div class="content-box mt-2 markmap-container" style="height: 500px;">
+            <p class="hint mt-1">Scroll to zoom, drag to pan, click a circle to fold a branch, and click a topic's text for AI detail.</p>
+            <div class="content-box mt-1 markmap-container" style="height: 500px; padding: 0;">
                 <svg id="markmap-svg" style="width: 100%; height: 100%;"></svg>
             </div>
+            <div id="mindmap-detail" class="content-box markdown-body mt-1 placeholder">Click a topic in the map to see more detail...</div>
         </section>
 
         <!-- 5. Sheets Backend -->
@@ -138,7 +149,7 @@
             <div class="api-key-section" style="border: none; padding-top: 0;">
                 <label>Apps Script Web App URL</label>
                 <input type="password" id="sheets-url" placeholder="https://script.google.com/macros/s/.../exec">
-                <small class="status-text text-muted">Not stored — cleared when you close this tab.</small>
+                <small class="status-text text-muted">Not stored — cleared when you close this tab. Deploy <code>apps-script/Code.gs</code> as a Web App (access: Anyone) to get this URL.</small>
             </div>
             
             <div class="two-col mt-2">
@@ -169,7 +180,9 @@
         <section id="quiz" class="view-section glass-panel">
             <h2><i class="fas fa-question-circle"></i> AI MCQ Quiz</h2>
             <div id="quiz-setup">
-                <input type="text" id="quiz-topic" placeholder="Enter topic to generate quiz on...">
+                <textarea id="quiz-topic" placeholder="Enter a topic or paste your notes to generate a quiz on..."></textarea>
+                <label for="quiz-count" class="hint">Number of questions (5-10)</label>
+                <input type="number" id="quiz-count" min="5" max="10" value="5">
                 <button id="btn-quiz-gen" class="btn-primary mt-1">Generate Quiz</button>
                 <div id="quiz-error" class="error-msg mt-1"></div>
             </div>
@@ -193,9 +206,11 @@
         <!-- 7. Chatbot -->
         <section id="chatbot" class="view-section glass-panel">
             <h2><i class="fas fa-comments"></i> Subject Doubt-Solving Chatbot</h2>
+            <input type="text" id="chat-subject" placeholder="Subject (e.g. Physics, Class 10 Maths)">
+            <div id="chat-error" class="error-msg mb-1"></div>
             <div class="chat-container">
                 <div id="chat-history" class="chat-history">
-                    <div class="chat-bubble ai">Hello! I am your AI tutor. Ask me any doubt.</div>
+                    <div class="chat-bubble ai">Hello! I am your AI tutor. Set a subject above and ask me any doubt.</div>
                 </div>
                 <div class="chat-input-area">
                     <input type="text" id="chat-input" placeholder="Type your question here...">
@@ -211,30 +226,43 @@
             <textarea id="flashcard-topic" placeholder="Enter a topic or chapter text..."></textarea>
             <div style="display:flex; gap: 1rem;" class="mt-1">
                 <button id="btn-flashcards" class="btn-primary">Generate Deck <i class="fas fa-magic"></i></button>
-                <button id="btn-flashcards-shuffle" class="btn-secondary hidden"><i class="fas fa-random"></i> Shuffle</button>
             </div>
             <div id="flashcards-error" class="error-msg mt-1"></div>
-            
-            <div id="flashcards-output" class="flashcard-grid mt-2">
-                <div class="content-box placeholder" style="grid-column: 1 / -1;">Cards will appear here...</div>
+
+            <div id="flashcards-placeholder" class="content-box placeholder mt-2">Cards will appear here...</div>
+            <div id="flashcards-deck" class="flashcard-deck mt-2 hidden">
+                <div id="flashcard-card" class="flashcard-container" tabindex="0" title="Click or press Space to flip">
+                    <div class="flashcard">
+                        <div class="flashcard-front"></div>
+                        <div class="flashcard-back"></div>
+                    </div>
+                </div>
+                <div class="ppt-controls">
+                    <button id="btn-flashcards-prev" class="btn-secondary"><i class="fas fa-chevron-left"></i> Prev</button>
+                    <span id="flashcards-counter">1 / 1</span>
+                    <div class="btn-row">
+                        <button id="btn-flashcards-shuffle" class="btn-secondary"><i class="fas fa-random"></i> Shuffle</button>
+                        <button id="btn-flashcards-next" class="btn-secondary">Next <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- 9. Study Planner -->
         <section id="planner" class="view-section glass-panel">
             <h2><i class="fas fa-calendar-alt"></i> AI Study Planner</h2>
-            <div class="two-col">
-                <div class="input-area">
-                    <input type="text" id="plan-subjects" placeholder="Subjects (e.g. Math, Physics)">
-                    <input type="number" id="plan-hours" placeholder="Hours per day">
-                    <input type="text" id="plan-days" placeholder="Number of days until exam">
-                    <button id="btn-planner" class="btn-primary mt-1">Generate Plan <i class="fas fa-magic"></i></button>
-                    <div id="planner-error" class="error-msg mt-1"></div>
+            <div class="input-area">
+                <input type="text" id="plan-subjects" placeholder="Subjects (e.g. Math, Physics, Chemistry)">
+                <input type="number" id="plan-hours" min="1" max="16" placeholder="Hours available per day">
+                <textarea id="plan-exams" placeholder="Exam / target dates, one per line (e.g. Math - 2026-10-15)"></textarea>
+                <div class="btn-row">
+                    <button id="btn-planner" class="btn-primary">Generate Plan <i class="fas fa-magic"></i></button>
+                    <button id="btn-planner-regen" class="btn-secondary hidden"><i class="fas fa-sync"></i> Regenerate (different balance)</button>
                 </div>
-                <div class="output-area">
-                    <div id="planner-output" class="content-box placeholder" style="padding:0; overflow:hidden;">Timetable will appear here...</div>
-                </div>
+                <div id="planner-error" class="error-msg mt-1"></div>
             </div>
+            <div id="planner-legend" class="planner-legend mt-2"></div>
+            <div id="planner-output" class="content-box placeholder mt-1">Timetable will appear here...</div>
         </section>
 
         <!-- 10. OCR Summarizer -->
@@ -242,14 +270,15 @@
             <h2><i class="fas fa-camera"></i> AI Notes Summarizer (OCR)</h2>
             <p>Upload a photo of your notes. We'll extract text in-browser and summarize it!</p>
             <input type="file" id="ocr-image" accept="image/*" class="mt-1">
-            <button id="btn-ocr" class="btn-primary mt-1">Extract & Summarize <i class="fas fa-magic"></i></button>
+            <img id="ocr-preview" class="ocr-preview hidden" alt="Uploaded notes preview">
+            <button id="btn-ocr" class="btn-primary mt-1">1. Extract Text <i class="fas fa-font"></i></button>
             <div id="ocr-error" class="error-msg mt-1"></div>
             
             <div class="two-col mt-2">
                 <div>
                     <h3>Extracted Text (Editable)</h3>
-                    <textarea id="ocr-raw" class="content-box placeholder" style="width: 100%; height: 300px;">OCR text will appear here...</textarea>
-                    <button id="btn-ocr-resummarize" class="btn-secondary mt-1 hidden">Re-Summarize Edits</button>
+                    <textarea id="ocr-raw" class="content-box" style="width: 100%; height: 300px;" placeholder="OCR text will appear here. Check and correct it before summarizing."></textarea>
+                    <button id="btn-ocr-summarize" class="btn-primary mt-1" disabled>2. Summarize Text <i class="fas fa-magic"></i></button>
                 </div>
                 <div>
                     <h3>AI Summary</h3>
